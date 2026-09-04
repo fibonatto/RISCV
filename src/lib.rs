@@ -1,19 +1,16 @@
 #![no_std]
-#![feature(panic_info_message,asm)]
+#![feature(panic_info_message)]
 
 ///////////////////////////////////////
 ///         RUST MACROS             ///
 ///////////////////////////////////////
-!#[macro_export]
-macro_rules! print 
-{
-    ($(@args:tt)+) => ({
-
-    });
+#[macro_export]
+macro_rules! print {
+    ($($args:tt)+) => {{}};
 }
 
-!#[macro_export]
-macro_rules! println 
+#[macro_export]
+macro_rules! println
 {
     () => ({
         print!("\r\n")
@@ -29,38 +26,38 @@ macro_rules! println
 }
 
 ///////////////////////////////////////////////
-///     LANGUAGE STRUCTURES / FUNCTIONS     /// 
+///     LANGUAGE STRUCTURES / FUNCTIONS     ///
 //////////////////////////////////////////////
-
-#[no_mangle]
-extern "C" fn eh_personality(){}
+#[unsafe(no_mangle)]
+extern "C" fn eh_personality() {}
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     print!("Aborting: ");
-    if let Some(p) = info.location(){
+    if let Some(p) = info.location() {
         println!(
             "line {}, file {}: {}",
             p.line,
             p.file,
             info.message().unwrap()
         );
-    }
-
-    else {
+    } else {
         println!("no information available.");
     }
     abort();
 }
 
-#[no_mangle]
-extern "C"
-fn abort() -> ! {
+#[unsafe(no_mangle)]
+extern "C" fn abort() -> ! {
     loop {
         unsafe {
-            asm!("wfi");
+            core::arch::asm!("wfi");
         }
     }
 }
 
-
-
+#[unsafe(no_mangle)]
+extern "C" fn kmain() {
+    // main should initialize all sub-systems and get
+    // ready to start scheduling. The last thing this
+    // should do is start the timer
+}
